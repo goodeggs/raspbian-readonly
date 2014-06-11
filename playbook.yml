@@ -1,0 +1,59 @@
+- name: provision raspbian-readonly
+  hosts: pi
+  gather_facts: false
+  tasks:
+
+    - name: disable swap
+      shell: >
+        dphys-swapfile swapoff &&
+        dphys-swapfile uninstall &&
+        update-rc.d dphys-swapfile disable
+
+    - name: install unionfs
+      apt: package=unionfs-fuse state=present
+
+    - name: install mount_unionfs
+      copy: src=files/mount_unionfs dest=/usr/local/bin/mount_unionfs mode=0755 owner=root group=root
+
+    - name: install fstab
+      copy: src=files/fstab dest=/etc/fstab mode=0644 owner=root group=root
+
+    - name: setup /etc_rw
+      shell: >
+        cp -al /etc /etc_org &&
+        mkdir /etc_rw
+
+    - name: setup /var_rw
+      shell: >
+        mv /var /var_org &&
+        mkdir /var /var_rw
+
+    - name: reboot
+      command: reboot
+
+    - name: wait for reboot
+      pause: seconds=30
+
+    - name: wait for ssh
+      local_action: wait_for host={{inventory_hostname}} port=22 timeout=60 state=started
+      sudo: false
+
+    - name: remount rw
+      raw: mount -o remount,rw /
+
+    - name: clean up the log directory
+      shell: >
+        for f in $(find . -name \*log); do > $f; done &&
+        cd /var_org/log &&
+        rm -f *.gz
+
+    - name: reboot
+      command: reboot
+
+    - name: wait for reboot
+      pause: seconds=30
+
+    - name: wait for ssh
+      local_action: wait_for host={{inventory_hostname}} port=22 timeout=60 state=started
+      sudo: false
+
