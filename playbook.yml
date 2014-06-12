@@ -30,8 +30,8 @@
 
     - name: setup /home_rw
       shell: >
-        mv /home /home_org &&
-        mkdir /home /home_rw
+        cp -al /home /home_org &&
+        mkdir /home_rw
 
     - name: reboot
       command: reboot
