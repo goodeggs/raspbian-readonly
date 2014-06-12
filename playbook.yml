@@ -28,6 +28,11 @@
         mv /var /var_org &&
         mkdir /var /var_rw
 
+    - name: setup /home_rw
+      shell: >
+        mv /home /home_org &&
+        mkdir /home /home_rw
+
     - name: reboot
       command: reboot
 
