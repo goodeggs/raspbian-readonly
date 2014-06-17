@@ -1,7 +1,11 @@
 #!/bin/sh
 [ -z "$1" ] && exit 1 || DIR=$1
-ROOT_MOUNT=$(grep -v "^#" /etc/fstab | awk '$2=="/" {print substr($4,1,2)}')
-if [ "$ROOT_MOUNT" != "ro" ]; then
+
+MOUNT_OPTS="$3"
+echo "$MOUNT_OPTS" | grep -q '\brw\b'
+IS_RW=$?
+
+if [ $IS_RW -eq 0 ]; then
   /bin/mount --bind ${DIR}_org ${DIR}
 else
   /bin/mount -t tmpfs ramdisk ${DIR}_rw
